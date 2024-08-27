@@ -736,13 +736,17 @@ class _WebviewState extends State<Webview> {
                     },
                     onPointerSignal: (signal) {
                       if (signal is PointerScrollEvent) {
-                        _controller._setScrollDelta(
-                            -signal.scrollDelta.dx, -signal.scrollDelta.dy);
+                        // _controller._setScrollDelta(-signal.scrollDelta.dx/2, -signal.scrollDelta.dy/2); // 이중 스크롤 안됨
+                        _setWebViewScroll(x: signal.position.dx, y: signal.position.dy, dx: 0, dy: signal.scrollDelta.dy);
                       }
                     },
                     onPointerPanZoomUpdate: (signal) {
-                      _controller._setScrollDelta(
-                          signal.panDelta.dx, signal.panDelta.dy);
+                      // _controller._setScrollDelta(signal.panDelta.dx, signal.panDelta.dy); // 트랙패드 속도가 느림
+                      if (signal.panDelta.dx.abs() > signal.panDelta.dy.abs()) {
+                        _controller._setScrollDelta(-signal.panDelta.dx, 0);
+                      } else {
+                        _controller._setScrollDelta(0, signal.panDelta.dy);
+                      }
                     },
                     child: MouseRegion(
                         cursor: _cursor,
@@ -761,6 +765,18 @@ class _WebviewState extends State<Webview> {
       unawaited(_controller._setSize(
           box.size, widget.scaleFactor ?? window.devicePixelRatio));
     }
+  }
+
+  _setWebViewScroll({required double dx, required double dy, required double x, required double y}) {
+    _controller.executeScript('''
+    var el = document.elementFromPoint($x,$y);
+    var el2 = eleCanScroll(el);
+    if(el2){
+      el2.scrollBy($dx,$dy);
+    }else{
+      var h = document.querySelector("html");
+    };
+    ''');
   }
 
   @override
