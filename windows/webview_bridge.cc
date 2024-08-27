@@ -324,8 +324,7 @@ void WebviewBridge::RegisterEventHandlers() {
 }
 
 void WebviewBridge::OnPermissionRequested(
-    const std::string& url,
-    WebviewPermissionKind permissionKind,
+    const std::string& url, WebviewPermissionKind permissionKind,
     bool isUserInitiated,
     Webview::WebviewPermissionRequestedCompleter completer) {
   auto args = std::make_unique<flutter::EncodableValue>(flutter::EncodableMap{
@@ -430,7 +429,10 @@ void WebviewBridge::HandleMethodCall(
                                static_cast<size_t>(height),
                                static_cast<float>(scale_factor));
 
-      texture_bridge_->Start();
+      if (height > 1.0 && width > 1.0) {
+        texture_bridge_->Start();
+      }
+
       return result->Success();
     }
     return result->Error(kErrorInvalidArgs);

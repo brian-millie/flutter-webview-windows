@@ -29,6 +29,8 @@ class ExampleBrowser extends StatefulWidget {
 
 class _ExampleBrowser extends State<ExampleBrowser> {
   final _controller = WebviewController();
+
+  final _secondController = WebviewController();
   final _textController = TextEditingController();
   final List<StreamSubscription> _subscriptions = [];
   bool _isWebviewSuspended = false;
@@ -52,9 +54,10 @@ class _ExampleBrowser extends State<ExampleBrowser> {
       _subscriptions.add(_controller.url.listen((url) {
         _textController.text = url;
       }));
+      await _secondController.initialize();
+      await _secondController.setSize(Size(0.0, 0.0), 1.0);
 
-      _subscriptions
-          .add(_controller.containsFullScreenElementChanged.listen((flag) {
+      _subscriptions.add(_controller.containsFullScreenElementChanged.listen((flag) {
         debugPrint('Contains fullscreen element: $flag');
         windowManager.setFullScreen(flag);
       }));
@@ -153,8 +156,7 @@ class _ExampleBrowser extends State<ExampleBrowser> {
                         StreamBuilder<LoadingState>(
                             stream: _controller.loadingState,
                             builder: (context, snapshot) {
-                              if (snapshot.hasData &&
-                                  snapshot.data == LoadingState.loading) {
+                              if (snapshot.hasData && snapshot.data == LoadingState.loading) {
                                 return LinearProgressIndicator();
                               } else {
                                 return SizedBox();
@@ -189,8 +191,7 @@ class _ExampleBrowser extends State<ExampleBrowser> {
           title: StreamBuilder<String>(
         stream: _controller.title,
         builder: (context, snapshot) {
-          return Text(
-              snapshot.hasData ? snapshot.data! : 'WebView (Windows) Example');
+          return Text(snapshot.hasData ? snapshot.data! : 'WebView (Windows) Example');
         },
       )),
       body: Center(
@@ -199,8 +200,7 @@ class _ExampleBrowser extends State<ExampleBrowser> {
     );
   }
 
-  Future<WebviewPermissionDecision> _onPermissionRequested(
-      String url, WebviewPermissionKind kind, bool isUserInitiated) async {
+  Future<WebviewPermissionDecision> _onPermissionRequested(String url, WebviewPermissionKind kind, bool isUserInitiated) async {
     final decision = await showDialog<WebviewPermissionDecision>(
       context: navigatorKey.currentContext!,
       builder: (BuildContext context) => AlertDialog(
@@ -208,13 +208,11 @@ class _ExampleBrowser extends State<ExampleBrowser> {
         content: Text('WebView has requested permission \'$kind\''),
         actions: <Widget>[
           TextButton(
-            onPressed: () =>
-                Navigator.pop(context, WebviewPermissionDecision.deny),
+            onPressed: () => Navigator.pop(context, WebviewPermissionDecision.deny),
             child: const Text('Deny'),
           ),
           TextButton(
-            onPressed: () =>
-                Navigator.pop(context, WebviewPermissionDecision.allow),
+            onPressed: () => Navigator.pop(context, WebviewPermissionDecision.allow),
             child: const Text('Allow'),
           ),
         ],
